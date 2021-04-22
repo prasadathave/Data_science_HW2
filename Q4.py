@@ -12,3 +12,20 @@ class countsketch:
 cs = countsketch(5,100)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
