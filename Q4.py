@@ -1,88 +1,5 @@
 
 import hashlib
-import array
-
-# reference
-
-# class CountMinSketch(object):
-#     """
-#     A class for counting hashable items using the Count-min Sketch strategy.
-#     It fulfills a similar purpose than `itertools.Counter`.
-#     The Count-min Sketch is a randomized data structure that uses a constant
-#     amount of memory and has constant insertion and lookup times at the cost
-#     of an arbitrarily small overestimation of the counts.
-#     It has two parameters:
-#      - `m` the size of the hash tables, larger implies smaller overestimation
-#      - `d` the amount of hash tables, larger implies lower probability of
-#            overestimation.
-#     An example usage:
-#         from countminsketch import CountMinSketch
-#         sketch = CountMinSketch(1000, 10)  # m=1000, d=10
-#         sketch.add("oh yeah")
-#         sketch.add(tuple())
-#         sketch.add(1, value=123)
-#         print sketch["oh yeah"]       # prints 1
-#         print sketch[tuple()]         # prints 1
-#         print sketch[1]               # prints 123
-#         print sketch["non-existent"]  # prints 0
-#     Note that this class can be used to count *any* hashable type, so it's
-#     possible to "count apples" and then "ask for oranges". Validation is up to
-#     the user.
-#     """
-
-#     def __init__(self, m, d):
-#         """ `m` is the size of the hash tables, larger implies smaller
-#         overestimation. `d` the amount of hash tables, larger implies lower
-#         probability of overestimation.
-#         """
-#         if not m or not d:
-#             raise ValueError("Table size (m) and amount of hash functions (d)"
-#                              " must be non-zero")
-#         self.size_of_hashtables = m
-#         self.number_of_hashtables = d
-#         self.number_of_elements_added= 0
-#         self.tables = []
-#         for _ in xrange(d):
-#             table = array.array("l", (0 for _ in xrange(m)))
-#             self.tables.append(table)
-
-#     def _hash(self, x):
-#         md5 = hashlib.md5(str(hash(x)))
-#         for i in xrange(self.number_of_hashtables):
-#             md5.update(str(i))
-#             yield int(md5.hexdigest(), 16) % self.size_of_hashtables
-
-#     def add(self, x, value=1):
-#         """
-#         Count element `x` as if had appeared `value` times.
-#         By default `value=1` so:
-#             sketch.add(x)
-#         Effectively counts `x` as occurring once.
-#         """
-#         self.number_of_elements_added+= value
-#         for table, i in zip(self.tables, self._hash(x)):
-#             table[i] += value
-
-#     def query(self, x):
-#         """
-#         Return an estimation of the amount of times `x` has ocurred.
-#         The returned value always overestimates the real value.
-#         """
-#         return min(table[i] for table, i in zip(self.tables, self._hash(x)))
-
-#     def __getitem__(self, x):
-#         """
-#         A convenience method to call `query`.
-#         """
-#         return self.query(x)
-
-#     def __len__(self):
-#         """
-#         The amount of things counted. Takes into account that the `value`
-#         argument of `add` might be different from 1.
-#         """
-#         return self.n
-
 
 from collections import Counter
 
@@ -200,9 +117,89 @@ karr = [100,200,500,1000,2000]
 val = 100
 file = open("matlab/train.data","r")
 array_of_values = [i.strip() for i in file.readlines()]
+
 absolute_counting = calculate_absolute()
-misra_gries_counting = misra_gries(val*w)
-CountMinSketch_counting = CountMinSketch(val,w)
-CountMinSketch_counting = CountSketch(val,w)
+for ab in array_of_values:
+    a,b,c = ab.split()
+    a = int(a)
+    b = int(b)
+    c = int(c)
+    absolute_counting.insert(b,c)
+
+arr_sorted = absolute_counting.count1.most_common(1000)
+
+import random
+
+a1 = set([])
+while len(a1)!=100:
+    a1.add(random.randint(0,1000))
+
+a1 = list(a1)
+a2 = list(range(len(a1)))
+
+for i in range(len(a1)):
+    a2[i] = list(arr_sorted.items())[a1[i]][1]
+    a1[i] = list(arr_sorted.items())[a1[i]][0]
+
+def averaged_error(actual_values,predicted_vales):
+    assert(len(actual_values)==len(predicted_vales))
+    value =0
+    for i in range(len(actual_values)):
+        value += abs(actual_values[i]-predicted_vales[i])/actual_values[i]
+    return value
+
+error_for_misra_gries =[]
+error_for_count_sketch =[]
+error_for_countmin_sketch =[]
+
+
+for val in karr:
+    misra_gries_counting = misra_gries(val*w)
+    for ab in array_of_values:
+        a,b,c = ab.split()
+        a = int(a)
+        b = int(b)
+        c = int(c)
+        misra_gries_counting.insert(b,c)
+    top_count_for_misra_gries = []    
+    for p in a1[i]:
+        top_count_for_misra_gries.append(misra_gries_counting.count1[p])
+
+    avgerr = averaged_error(a2,top_count_for_misra_gries)
+    error_for_misra_gries.append(avgerr)
+
+
+
+    CountMinSketch_counting = CountMinSketch(val,w)
+    for ab in array_of_values:
+        a,b,c = ab.split()
+        a = int(a)
+        b = int(b)
+        c = int(c)
+        CountMinSketch_counting.add(b,c)
+    top_count_for_Countmin_sketch = []
+    for p in a1[i]:
+        top_count_for_Countmin_sketch.append(CountMinSketch_counting.get_count(p))
+    avgerr = averaged_error(a2,top_count_for_Countmin_sketch)
+    error_for_countmin_sketch.append(avgerr)
+
+
+
+    CountSketch_counting = CountSketch(val,w)
+    for ab in array_of_values:
+        a,b,c = ab.split()
+        a = int(a)
+        b = int(b)
+        c = int(c)
+        CountSketch_counting.add(b,c)
+
+    top_count_for_Count_sketch = []
+    for p in a1[i]:
+        top_count_for_Count_sketch.append(CountSketch_counting.get_count(p))
+    avgerr = averaged_error(a2,top_count_for_Count_sketch)
+    error_for_count_sketch.append(avgerr)
+
+
+
 
 
